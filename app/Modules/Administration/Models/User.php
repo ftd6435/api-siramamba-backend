@@ -4,6 +4,7 @@ namespace App\Modules\Administration\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\Modules\Gestions\Models\AffectationStation;
 use App\Traits\CloudflareUpload;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,8 +13,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Str;
 
-#[Fillable(['name', 'email', 'telephone', 'status', 'avatar', 'password'])]
+#[Fillable(['name', 'email', 'telephone', 'username', 'is_active', 'role', 'avatar', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,8 +32,31 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'status' => 'boolean'
+            'is_active' => 'boolean'
         ];
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function (User $user) {
+            if (empty($user->username)) {
+                $user->username = static::generateUniqueUsername($user->name);
+            }
+        });
+    }
+
+    protected static function generateUniqueUsername(string $fullName): string
+    {
+        $firstName = Str::of(trim($fullName))->explode(' ')->first() ?: 'user';
+        $base = Str::slug($firstName, '');
+
+        do {
+            $username = $base . random_int(1000, 9999);
+        } while (static::where('username', $username)->exists());
+
+        return $username;
     }
 
     protected $appends = [
@@ -60,5 +85,15 @@ class User extends Authenticatable
         })->join(' '));
 
         return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&color=7F9CF5&background=EBF4FF';
+    }
+
+    public function userModules()
+    {
+        return $this->hasMany(UserModule::class, 'user_id');
+    }
+
+    public function affectations()
+    {
+        return $this->hasMany(AffectationStation::class, 'user_id');
     }
 }

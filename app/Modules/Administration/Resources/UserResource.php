@@ -11,12 +11,15 @@ class UserResource extends JsonResource
     #[Override]
     public function toArray(Request $request)
     {
+
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'username' => $this->username,
             'telephone' => $this->telephone,
             'email' => $this->email,
             'avatar_url' => $this->avatar_url,
+            'role' => $this->role,
             'created_at' => $this->created_at?->format('d-m-Y H:i:s'),
             'updated_at' => $this->updated_at?->format('d-m-Y H:i:s'),
         ];

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Administration\Models\User;
 use App\Modules\Administration\Requests\LoginRequest;
 use App\Modules\Administration\Requests\RegisterRequest;
+use App\Modules\Administration\Requests\UpdatePasswordRequest;
 use App\Modules\Administration\Requests\UpdateProfileRequest;
 use App\Modules\Administration\Resources\UserResource;
 use App\Traits\ApiResponses;
@@ -29,6 +30,7 @@ class AuthController extends Controller
             'name' => $data['name'],
             'telephone' => $data['telephone'],
             'email' => $data['email'],
+            'role' => $data['role'] ?? 'user',
             'avatar' => $data['avatar'] ?? null,
             'password' => Hash::make($data['password']),
         ]);
@@ -56,6 +58,10 @@ class AuthController extends Controller
             return $this->errorResponse("Information invalide");
         }
 
+        if (!$user->is_active) {
+            return $this->errorResponse("Votre compte est désactivé");
+        }
+
         $token = $user->createToken('user-token')->plainTextToken;
 
         $action = "Connection de " . $user->name;
@@ -75,36 +81,93 @@ class AuthController extends Controller
         return $this->noContentSuccessResponse("Utilisateur deconnecté avec succès.");
     }
 
-    // ajoute de la fonction de mise à jour du profil de l'utilisateur
+    public function switchStatus(Request $request, User $user)
+    {
+        // Only super_admin can perform this action
+        if (!$request->user()->hasRole('super_admin')) {
+            return $this->errorResponse(
+                "Vous n'avez pas la permission de changer le statut d'un utilisateur.",
+                403
+            );
+        }
 
-    public function UpdateProfile(UpdateProfileRequest $request){
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        $action = "Changement d'état de l'utilisateur " . $user->name;
+        logActivity($action, $user->toArray(), $user);
+
+        return $this->successResponse(
+            new UserResource($user),
+            "Statut de l'utilisateur changé avec succès."
+        );
+    }
+
+    public function updateProfile(UpdateProfileRequest $request)
+    {
         $user = $request->user();
         $data = $request->validated();
 
-        if ($request->hasFile('avatar')){
-            if($user->avatar) {
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
                 $this->deleteImage($user->avatar, 'avatars');
             }
             $data['avatar'] = $this->uploadImage($request->file('avatar'), 'avatars');
-        }
-
-        if (!empty($data['password'])){
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
         }
 
         $user->update($data);
 
         $action = "Mise à jour du profil " . $user->name;
         logActivity(
-            $action, $data, $user
+            $action,
+            $data,
+            $user
         );
 
-        return $this->successResponse(new UserResource($user), 
-        "Profil mis à jour avec succès.");
+        return $this->successResponse(
+            new UserResource($user),
+            "Profil mis à jour avec succès."
+        );
     }
-    
 
+    public function updatePassword(UpdatePasswordRequest $request)
+    {
+        $user = $request->user();
+        $data = $request->validated();
 
+        if (!Hash::check($data['current_password'], $user->password)) {
+            return $this->errorResponse("Mot de passe actuel incorrect");
+        }
+
+        $user->password = Hash::make($data['new_password']);
+        $user->save();
+
+        $action = "Mise à jour du mot de passe de " . $user->name;
+        logActivity($action, $data, $user);
+
+        return $this->successResponse(
+            new UserResource($user),
+            "Mot de passe mis à jour avec succès."
+        );
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        return $this->successResponse(
+            new UserResource($user),
+            "Utilisateur récupéré avec succès."
+        );
+    }
+
+    public function users(Request $request)
+    {
+        $users = User::orderBy('created_at', 'desc')->get();
+
+        return $this->successResponse(
+            UserResource::collection($users),
+            "Utilisateurs récupérés avec succès."
+        );
+    }
 }

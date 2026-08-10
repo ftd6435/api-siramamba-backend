@@ -18,7 +18,8 @@ class RegisterRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'min:2', 'max:160'],
             'telephone' => ['required', 'string', 'min:9', 'max:14', 'unique:users,telephone'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => ['nullable', 'email', 'unique:users,email'],
+            'role' => ['nullable', 'string', 'in:user,super_admin,admin,client'],
             'avatar' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'password' => ['required', 'string', 'min:6', 'confirmed']
 
@@ -43,10 +44,17 @@ class RegisterRequest extends FormRequest
             'telephone.unique'   => "Ce numéro de téléphone est déjà utilisé.",
 
             // Email
-            'email.required' => "L'adresse email est obligatoire.",
             'email.email'    => "L'adresse email n'est pas valide.",
             'email.max'      => "L'adresse email ne peut pas dépasser :max caractères.",
             'email.unique'   => "Cette adresse email est déjà utilisée.",
+
+            // Role
+            'role.in' => "Ce rôle est invalide.",
+
+            // Avatar
+            'avatar.image' => "L'avatar n'est pas une image valide.",
+            'avatar.mimes' => "L'avatar doit être une image PNG, JPG ou JPEG.",
+            'avatar.max' => "L'avatar ne peut pas dépasser :max Mo.",
 
             // Password
             'password.required'  => "Le mot de passe est obligatoire.",
