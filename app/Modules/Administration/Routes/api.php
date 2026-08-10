@@ -1,8 +1,6 @@
 <?php
 
 use App\Modules\Administration\Controllers\AuthController;
-use App\Modules\Administration\Controllers\ModuleController;
-use App\Modules\Administration\Controllers\UserModuleController;
 use Illuminate\Support\Facades\Route;
 
 // Define API routes for Administration module here

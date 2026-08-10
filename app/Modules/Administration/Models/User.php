@@ -4,7 +4,6 @@ namespace App\Modules\Administration\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-use App\Modules\Gestions\Models\AffectationStation;
 use App\Traits\CloudflareUpload;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -85,15 +84,5 @@ class User extends Authenticatable
         })->join(' '));
 
         return 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&color=7F9CF5&background=EBF4FF';
-    }
-
-    public function userModules()
-    {
-        return $this->hasMany(UserModule::class, 'user_id');
-    }
-
-    public function affectations()
-    {
-        return $this->hasMany(AffectationStation::class, 'user_id');
     }
 }
