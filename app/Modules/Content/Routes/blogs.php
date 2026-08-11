@@ -1,9 +1,12 @@
 <?php
 
+use App\Modules\Content\Controllers\BlogController;
 use App\Modules\Content\Controllers\TestimonialController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('v1/testimonials', [TestimonialController::class, 'publicIndex']);
+Route::get('v1/blogs', [BlogController::class, 'publicIndex']);
+Route::get('v1/blogs/{blog}', [BlogController::class, 'publicShow']);
 
 Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('testimonials', [TestimonialController::class, 'index']);
@@ -11,4 +14,10 @@ Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('testimonials/{testimonial}', [TestimonialController::class, 'show']);
     Route::patch('testimonials/{testimonial}', [TestimonialController::class, 'update']);
     Route::delete('testimonials/{testimonial}', [TestimonialController::class, 'destroy']);
+
+    Route::get('blogs', [BlogController::class, 'index']);
+    Route::post('blogs', [BlogController::class, 'store']);
+    Route::get('blogs/{blog}', [BlogController::class, 'show']);
+    Route::patch('blogs/{blog}', [BlogController::class, 'update']);
+    Route::delete('blogs/{blog}', [BlogController::class, 'destroy']);
 });
