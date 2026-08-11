@@ -81,3 +81,4 @@ Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
 });
 
 require __DIR__.'/services.php';
+require __DIR__.'/teams.php';
