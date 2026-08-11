@@ -67,6 +67,7 @@ return [
             'region' => 'auto',
             'bucket' => env('R2_BUCKET'),
             'endpoint' => env('R2_ENDPOINT'),
+            'public_url' => env('R2_PUBLIC_URL'),
             'use_path_style_endpoint' => true,
             'throw' => false,
         ],
