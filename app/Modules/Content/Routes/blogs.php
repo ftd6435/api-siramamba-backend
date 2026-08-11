@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Content\Controllers\BlogController;
+use App\Modules\Content\Controllers\BlogImageController;
 use App\Modules\Content\Controllers\TestimonialController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,4 +21,11 @@ Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('blogs/{blog}', [BlogController::class, 'show']);
     Route::patch('blogs/{blog}', [BlogController::class, 'update']);
     Route::delete('blogs/{blog}', [BlogController::class, 'destroy']);
+
+    Route::post('blogs/images', [BlogImageController::class, 'storeUnattached']);
+    Route::delete('blogs/images/{blogImage}', [BlogImageController::class, 'destroyUnattached']);
+
+    Route::get('blogs/{blog}/images', [BlogImageController::class, 'index']);
+    Route::post('blogs/{blog}/images', [BlogImageController::class, 'storeForBlog']);
+    Route::delete('blogs/{blog}/images/{blogImage}', [BlogImageController::class, 'destroyForBlog']);
 });

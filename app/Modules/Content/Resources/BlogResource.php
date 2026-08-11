@@ -20,6 +20,7 @@ class BlogResource extends JsonResource
             'thumbnail_url' => $this->thumbnail_url,
             'is_featured' => $this->is_featured,
             'is_active' => $this->is_active,
+            'images' => BlogImageResource::collection($this->whenLoaded('images')),
             'created_at' => $this->created_at?->format('d-m-Y H:i:s'),
             'updated_at' => $this->updated_at?->format('d-m-Y H:i:s'),
         ];

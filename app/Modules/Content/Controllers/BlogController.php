@@ -4,6 +4,7 @@ namespace App\Modules\Content\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Content\Models\Blog;
+use App\Modules\Content\Models\BlogImage;
 use App\Modules\Content\Requests\StoreBlogRequest;
 use App\Modules\Content\Requests\UpdateBlogRequest;
 use App\Modules\Content\Resources\BlogResource;
@@ -17,9 +18,11 @@ class BlogController extends Controller
 
     private const THUMBNAIL_PATH = 'blogs/thumbnails';
 
+    private const IMAGES_PATH = 'blogs/images';
+
     public function index()
     {
-        $blogs = Blog::latest()->get();
+        $blogs = Blog::with('images')->latest()->get();
 
         return $this->successResponse(
             BlogResource::collection($blogs),
@@ -29,7 +32,7 @@ class BlogController extends Controller
 
     public function publicIndex()
     {
-        $blogs = Blog::where('is_active', true)->latest()->get();
+        $blogs = Blog::with('images')->where('is_active', true)->latest()->get();
 
         return $this->successResponse(
             BlogResource::collection($blogs),
@@ -40,7 +43,7 @@ class BlogController extends Controller
     public function show(Blog $blog)
     {
         return $this->successResponse(
-            new BlogResource($blog),
+            new BlogResource($blog->load('images')),
             'Blog récupéré avec succès.'
         );
     }
@@ -50,7 +53,7 @@ class BlogController extends Controller
         abort_unless($blog->is_active, 404);
 
         return $this->successResponse(
-            new BlogResource($blog),
+            new BlogResource($blog->load('images')),
             'Blog récupéré avec succès.'
         );
     }
@@ -73,8 +76,10 @@ class BlogController extends Controller
             throw $exception;
         }
 
+        $this->syncImages($blog, $request->validated('image_ids') ?? [], $request->file('images') ?? []);
+
         return $this->successResponse(
-            new BlogResource($blog),
+            new BlogResource($blog->load('images')),
             'Blog créé avec succès.',
             201
         );
@@ -108,8 +113,10 @@ class BlogController extends Controller
             $this->deleteImageSafely($oldThumbnail, self::THUMBNAIL_PATH);
         }
 
+        $this->syncImages($blog, $request->validated('image_ids') ?? [], $request->file('images') ?? []);
+
         return $this->successResponse(
-            new BlogResource($blog->refresh()),
+            new BlogResource($blog->refresh()->load('images')),
             'Blog mis à jour avec succès.'
         );
     }
@@ -118,11 +125,28 @@ class BlogController extends Controller
     {
         $thumbnail = $blog->thumbnail;
 
+        foreach ($blog->images as $image) {
+            $image->delete();
+            $this->deleteImageSafely($image->image_path, self::IMAGES_PATH);
+        }
+
         $blog->delete();
 
         $this->deleteImageSafely($thumbnail, self::THUMBNAIL_PATH);
 
         return $this->noContentSuccessResponse('Blog supprimé avec succès.');
+    }
+
+    private function syncImages(Blog $blog, array $imageIds, array $imageFiles): void
+    {
+        if (! empty($imageIds)) {
+            BlogImage::whereIn('id', $imageIds)->update(['blog_id' => $blog->id]);
+        }
+
+        foreach ($imageFiles as $file) {
+            $imagePath = $this->uploadImage($file, self::IMAGES_PATH);
+            $blog->images()->create(['image_path' => $imagePath]);
+        }
     }
 
     private function deleteImageSafely(?string $image, string $path): void

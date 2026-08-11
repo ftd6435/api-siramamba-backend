@@ -4,6 +4,7 @@ namespace App\Modules\Content\Models;
 
 use App\Traits\CloudflareUpload;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Blog extends Model
 {
@@ -25,6 +26,11 @@ class Blog extends Model
             'is_featured' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(BlogImage::class);
     }
 
     public function getThumbnailUrlAttribute(): ?string
