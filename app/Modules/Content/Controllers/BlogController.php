@@ -130,6 +130,9 @@ class BlogController extends Controller
             $this->deleteImageSafely($image->image_path, self::IMAGES_PATH);
         }
 
+        $blog->comments()->whereNotNull('parent_id')->delete();
+        $blog->comments()->delete();
+
         $blog->delete();
 
         $this->deleteImageSafely($thumbnail, self::THUMBNAIL_PATH);

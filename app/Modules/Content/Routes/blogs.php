@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\Content\Controllers\BlogCommentController;
 use App\Modules\Content\Controllers\BlogController;
 use App\Modules\Content\Controllers\BlogImageController;
 use App\Modules\Content\Controllers\TestimonialController;
@@ -8,6 +9,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('v1/testimonials', [TestimonialController::class, 'publicIndex']);
 Route::get('v1/blogs', [BlogController::class, 'publicIndex']);
 Route::get('v1/blogs/{blog}', [BlogController::class, 'publicShow']);
+Route::get('v1/blogs/{blog}/comments', [BlogCommentController::class, 'index']);
+Route::post('v1/blogs/{blog}/comments', [BlogCommentController::class, 'store']);
 
 Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('testimonials', [TestimonialController::class, 'index']);

@@ -33,6 +33,11 @@ class Blog extends Model
         return $this->hasMany(BlogImage::class);
     }
 
+    public function comments(): HasMany
+    {
+        return $this->hasMany(BlogComment::class);
+    }
+
     public function getThumbnailUrlAttribute(): ?string
     {
         return $this->thumbnail
