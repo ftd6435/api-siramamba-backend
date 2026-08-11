@@ -7,6 +7,8 @@ use App\Modules\Content\Controllers\ProjectImageController;
 use App\Modules\Content\Controllers\BlogCommentController;
 use App\Modules\Content\Controllers\BlogController;
 use App\Modules\Content\Controllers\BlogImageController;
+use App\Modules\Content\Controllers\GalleryCategoryController;
+use App\Modules\Content\Controllers\GalleryController;
 use App\Modules\Content\Controllers\TestimonialController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,9 @@ Route::get('v1/projects', [ProjectController::class, 'publicIndex']);
 Route::get('v1/projects/{project}', [ProjectController::class, 'publicShow']);
 Route::get('v1/projects/{project}/comments', [ProjectCommentController::class, 'index']);
 Route::post('v1/projects/{project}/comments', [ProjectCommentController::class, 'store']);
+Route::get('v1/gallery-categories', [GalleryCategoryController::class, 'publicIndex']);
+Route::get('v1/galleries', [GalleryController::class, 'publicIndex']);
+Route::get('v1/galleries/{gallery}', [GalleryController::class, 'publicShow']);
 
 Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('categories', [CategoryController::class, 'index']);
@@ -61,4 +66,21 @@ Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('projects/{project}/images', [ProjectImageController::class, 'index']);
     Route::post('projects/{project}/images', [ProjectImageController::class, 'store']);
     Route::delete('projects/{project}/images/{projectImage}', [ProjectImageController::class, 'destroy']);
+
+    Route::get('gallery-categories', [GalleryCategoryController::class, 'index']);
+    Route::post('gallery-categories', [GalleryCategoryController::class, 'store']);
+    Route::get('gallery-categories/{galleryCategory}', [GalleryCategoryController::class, 'show']);
+    Route::patch('gallery-categories/{galleryCategory}', [GalleryCategoryController::class, 'update']);
+    Route::delete('gallery-categories/{galleryCategory}', [GalleryCategoryController::class, 'destroy']);
+
+    Route::get('galleries', [GalleryController::class, 'index']);
+    Route::post('galleries', [GalleryController::class, 'store']);
+    Route::get('galleries/{gallery}', [GalleryController::class, 'show']);
+    Route::patch('galleries/{gallery}', [GalleryController::class, 'update']);
+    Route::delete('galleries/{gallery}', [GalleryController::class, 'destroy']);
 });
+
+require __DIR__.'/services.php';
+require __DIR__.'/teams.php';
+require __DIR__.'/newsletters.php';
+require __DIR__.'/settings.php';
