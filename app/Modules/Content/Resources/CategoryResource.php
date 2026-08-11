@@ -6,22 +6,17 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Override;
 
-class BlogResource extends JsonResource
+class CategoryResource extends JsonResource
 {
     #[Override]
     public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'category_id' => $this->category_id,
-            'category' => new CategoryResource($this->whenLoaded('category')),
-            'title' => $this->title,
-            'short_description' => $this->short_description,
+            'name' => $this->name,
             'description' => $this->description,
-            'thumbnail_url' => $this->thumbnail_url,
-            'is_featured' => $this->is_featured,
+            'type' => $this->type,
             'is_active' => $this->is_active,
-            'images' => BlogImageResource::collection($this->whenLoaded('images')),
             'created_at' => $this->created_at?->format('d-m-Y H:i:s'),
             'updated_at' => $this->updated_at?->format('d-m-Y H:i:s'),
         ];

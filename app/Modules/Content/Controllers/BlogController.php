@@ -22,7 +22,7 @@ class BlogController extends Controller
 
     public function index()
     {
-        $blogs = Blog::with('images')->latest()->get();
+        $blogs = Blog::with(['category', 'images'])->latest()->get();
 
         return $this->successResponse(
             BlogResource::collection($blogs),
@@ -32,7 +32,7 @@ class BlogController extends Controller
 
     public function publicIndex()
     {
-        $blogs = Blog::with('images')->where('is_active', true)->latest()->get();
+        $blogs = Blog::with(['category', 'images'])->where('is_active', true)->latest()->get();
 
         return $this->successResponse(
             BlogResource::collection($blogs),
@@ -43,7 +43,7 @@ class BlogController extends Controller
     public function show(Blog $blog)
     {
         return $this->successResponse(
-            new BlogResource($blog->load('images')),
+            new BlogResource($blog->load(['category', 'images'])),
             'Blog récupéré avec succès.'
         );
     }
@@ -53,7 +53,7 @@ class BlogController extends Controller
         abort_unless($blog->is_active, 404);
 
         return $this->successResponse(
-            new BlogResource($blog->load('images')),
+            new BlogResource($blog->load(['category', 'images'])),
             'Blog récupéré avec succès.'
         );
     }
@@ -79,7 +79,7 @@ class BlogController extends Controller
         $this->syncImages($blog, $request->validated('image_ids') ?? [], $request->file('images') ?? []);
 
         return $this->successResponse(
-            new BlogResource($blog->load('images')),
+            new BlogResource($blog->load(['category', 'images'])),
             'Blog créé avec succès.',
             201
         );
@@ -116,7 +116,7 @@ class BlogController extends Controller
         $this->syncImages($blog, $request->validated('image_ids') ?? [], $request->file('images') ?? []);
 
         return $this->successResponse(
-            new BlogResource($blog->refresh()->load('images')),
+            new BlogResource($blog->refresh()->load(['category', 'images'])),
             'Blog mis à jour avec succès.'
         );
     }
