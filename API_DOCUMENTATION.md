@@ -923,6 +923,78 @@ Returns all events with category + images.
 
 ---
 
+### 4.15 Contact (Formulaire de contact)
+
+#### Submit Contact Form
+
+**POST** `/api/v1/contacts` — **Public**
+
+Submits a contact message. The system will automatically:
+
+1.  Persist the message in the database
+2.  **Queue** an admin notification email to `MAIL_FROM_ADDRESS` (with all contact details + Reply-To set to visitor)
+3.  **Queue** an auto-reply confirmation email back to the visitor (with dossier number + message recap + branding)
+
+Both emails are sent asynchronously via the Laravel Queue (database driver by default).
+
+**Request Body** (JSON):
+
+```json
+{
+    "name": "Abdoulaye Diallo",
+    "email": "a.diallo@example.com",
+    "telephone": "624000001",
+    "subject": "Demande de partenariat minier",
+    "message": "Bonjour, je souhaiterais entrer en contact avec votre service commercial pour discuter d'un éventuel partenariat dans l'exploitation d'or dans la région de Siguiri."
+}
+```
+
+**Validation Rules**:
+| Field | Type | Rules |
+|-------|------|-------|
+| name | string | required |
+| email | string | required, email |
+| telephone | string | required, max:30 |
+| subject | string | required |
+| message | string | required |
+
+**Success Response** (200/201 — contact is saved, emails are queued):
+
+```json
+{
+    "status": 1,
+    "message": "Message envoyer avec succès",
+    "data": {
+        "id": 1,
+        "name": "Abdoulaye Diallo",
+        "email": "a.diallo@example.com",
+        "telephone": "624000001",
+        "subject": "Demande de partenariat minier",
+        "message": "Bonjour, je souhaiterais entrer en contact avec votre service commercial pour discuter d'un éventuel partenariat dans l'exploitation d'or dans la région de Siguiri.",
+        "created_at": "11-08-2026 14:35:12",
+        "updated_at": "11-08-2026 14:35:12"
+    }
+}
+```
+
+**Validation Error Response** (422):
+
+```json
+{
+    "status": 0,
+    "message": "Le nom est requis (et 3 autres erreurs)",
+    "error": {
+        "name": ["Le nom est requis"],
+        "email": ["L'email est requis", "L'email doit être au format valide"],
+        "telephone": ["Le téléphone est requis"],
+        "subject": ["Le sujet est requis"],
+        "message": ["Le message est requis"]
+    }
+}
+```
+
+---
+
 ## 5. Admin Endpoints (Dashboard)
 
 All admin routes require **Authentication** via Bearer token.
@@ -1485,6 +1557,54 @@ form.append("is_active", "true"); // required, boolean
 
 ---
 
+### 5.17 Contacts CRUD (Admin)
+
+Create is public. List + Delete require **Authentication** (Sanctum).
+
+#### List All Contact Messages (Admin)
+
+**GET** `/api/v1/contacts` — **Requires Auth**
+
+Returns all contact submissions sorted by newest first.
+
+**Success Response**:
+
+```json
+{
+    "status": 1,
+    "message": "Liste des contacts",
+    "data": [
+        {
+            "id": 1,
+            "name": "Abdoulaye Diallo",
+            "email": "a.diallo@example.com",
+            "telephone": "624000001",
+            "subject": "Demande de partenariat",
+            "message": "Bonjour, ...",
+            "created_at": "11-08-2026 14:35:12",
+            "updated_at": "11-08-2026 14:35:12"
+        }
+    ]
+}
+```
+
+#### Delete Contact Message
+
+**DELETE** `/api/v1/contacts/{contact_id}` — **Requires Auth**
+
+Uses implicit route model binding — returns 404 if contact doesn't exist.
+
+**Success Response**:
+
+```json
+{
+    "status": 1,
+    "message": "Contact supprimé avec succès"
+}
+```
+
+---
+
 ## 6. Angular Frontend Integration Guide
 
 ### 6.1 Recommended User Flow (Angular App)
@@ -1500,6 +1620,7 @@ Visitor (Public Site)
 ├── Events page: /event-categories → /events → /events/:id
 ├── Event testimonials: /event-testimonials
 ├── Newsletter subscribe: POST /newsletters (footer form)
+├── Contact page: POST /contacts (formulaire → envoi email asynchrone + accusé réception)
 └── Auth:
     ├── Login: POST /auth/login → store token → redirect to dashboard
     └── Register: POST /auth/register → store token
@@ -1521,6 +1642,7 @@ Authenticated Admin (Dashboard)
 ├── Event Testimonial CRUD
 ├── Partner Type CRUD
 ├── Partner CRUD
+└── Contact messages: /contacts (list) + /contacts/:id (delete)
 └── Super Admin only:
     ├── /admin/users (list)
     └── /admin/switch-status/:id (toggle user active)
@@ -1758,66 +1880,69 @@ export const SETTING_TYPES = ["text", "json", "boolean", "image"] as const;
 
 ### 6.7 Quick Endpoints Summary Table
 
-| #       | Method | Path                                    | Auth              | Purpose                         |
-| ------- | ------ | --------------------------------------- | ----------------- | ------------------------------- |
-| 1       | POST   | `/api/v1/auth/register`                 | No                | Register user                   |
-| 2       | POST   | `/api/v1/auth/login`                    | No                | Login user                      |
-| 3       | POST   | `/api/v1/auth/logout`                   | Yes               | Logout                          |
-| 4       | GET    | `/api/v1/auth/me`                       | Yes               | Get profile                     |
-| 5       | PUT    | `/api/v1/auth/me`                       | Yes               | Update profile                  |
-| 6       | PUT    | `/api/v1/auth/password`                 | Yes               | Update password                 |
-| 7       | GET    | `/api/v1/admin/users`                   | Yes               | List users                      |
-| 8       | PATCH  | `/api/v1/admin/switch-status/{id}`      | Yes (super_admin) | Toggle user status              |
-| --      | --     | **Public Content**                      | --                | --                              |
-| 9       | GET    | `/api/v1/services`                      | No                | List active services            |
-| 10      | GET    | `/api/v1/services/{id}`                 | No                | View service                    |
-| 11      | GET    | `/api/v1/categories`                    | No                | List active categories          |
-| 12      | GET    | `/api/v1/projects`                      | No                | List active projects            |
-| 13      | GET    | `/api/v1/projects/{id}`                 | No                | View project                    |
-| 14      | GET    | `/api/v1/projects/{id}/comments`        | No                | List project comments           |
-| 15      | POST   | `/api/v1/projects/{id}/comments`        | No                | Add project comment             |
-| 16      | GET    | `/api/v1/blogs`                         | No                | List active blogs               |
-| 17      | GET    | `/api/v1/blogs/{id}`                    | No                | View blog                       |
-| 18      | GET    | `/api/v1/blogs/{id}/comments`           | No                | List blog comments              |
-| 19      | POST   | `/api/v1/blogs/{id}/comments`           | No                | Add blog comment                |
-| 20      | GET    | `/api/v1/gallery-categories`            | No                | List gallery categories         |
-| 21      | GET    | `/api/v1/galleries`                     | No                | List active galleries           |
-| 22      | GET    | `/api/v1/galleries/{id}`                | No                | View gallery                    |
-| 23      | GET    | `/api/v1/teams`                         | No                | List active team                |
-| 24      | GET    | `/api/v1/teams/{id}`                    | No                | View team member                |
-| 25      | GET    | `/api/v1/testimonials`                  | No                | List testimonials               |
-| 26      | POST   | `/api/v1/newsletters`                   | No                | Subscribe newsletter            |
-| 27      | GET    | `/api/v1/event-categories`              | No                | List event categories           |
-| 28      | GET    | `/api/v1/events`                        | No                | List events                     |
-| 29      | GET    | `/api/v1/events/{id}`                   | No                | View event                      |
-| 30      | GET    | `/api/v1/event-testimonials`            | No                | List event testimonials         |
-| 31      | GET    | `/api/v1/type-partners`                 | No                | List partner types              |
-| 32      | GET    | `/api/v1/partners`                      | No                | List partners                   |
-| --      | --     | **Admin CRUD**                          | --                | --                              |
-| 33-37   | CRUD   | `/api/v1/admin/services`                | Yes               | Services admin                  |
-| 38      | POST   | `/api/v1/admin/services/images`         | Yes               | Pre-upload service editor image |
-| 39      | DELETE | `/api/v1/admin/services/{s}/images/{i}` | Yes               | Delete service image            |
-| 40-44   | CRUD   | `/api/v1/admin/categories`              | Yes               | Categories admin                |
-| 45-49   | CRUD   | `/api/v1/admin/projects`                | Yes               | Projects admin                  |
-| 50-52   | Images | `/api/v1/admin/projects/{id}/images`    | Yes               | Project images                  |
-| 53-57   | CRUD   | `/api/v1/admin/blogs`                   | Yes               | Blogs admin                     |
-| 58      | POST   | `/api/v1/admin/blogs/images`            | Yes               | Pre-upload blog image           |
-| 59      | DELETE | `/api/v1/admin/blogs/images/{id}`       | Yes               | Delete unattached blog image    |
-| 60-62   | Images | `/api/v1/admin/blogs/{id}/images`       | Yes               | Attached blog images            |
-| 63-67   | CRUD   | `/api/v1/admin/gallery-categories`      | Yes               | Gallery categories              |
-| 68-72   | CRUD   | `/api/v1/admin/galleries`               | Yes               | Galleries                       |
-| 73-77   | CRUD   | `/api/v1/admin/teams`                   | Yes               | Team members                    |
-| 78-82   | CRUD   | `/api/v1/admin/testimonials`            | Yes               | Testimonials                    |
-| 83-86   | CRUD   | `/api/v1/admin/newsletters`             | Yes               | Newsletter subscribers          |
-| 87-91   | CRUD   | `/api/v1/admin/settings`                | Yes               | Site settings                   |
-| 92-96   | CRUD   | `/api/v1/event-categories`              | Yes (write)       | Event categories                |
-| 97-101  | CRUD   | `/api/v1/events`                        | Yes (write)       | Events                          |
-| 102     | DELETE | `/api/v1/events/images/{id}`            | Yes               | Delete event image              |
-| 103     | POST   | `/api/v1/events/description-image`      | Yes               | Upload CKEditor event image     |
-| 104-108 | CRUD   | `/api/v1/participants`                  | Yes               | Event participants              |
-| 109-111 | CRUD   | `/api/v1/event-testimonials`            | Yes (write)       | Event testimonials              |
-| 112-116 | CRUD   | `/api/v1/type-partners`                 | Yes (write)       | Partner types                   |
-| 117-121 | CRUD   | `/api/v1/partners`                      | Yes (write)       | Partners                        |
+| #       | Method | Path                                    | Auth              | Purpose                           |
+| ------- | ------ | --------------------------------------- | ----------------- | --------------------------------- |
+| 1       | POST   | `/api/v1/auth/register`                 | No                | Register user                     |
+| 2       | POST   | `/api/v1/auth/login`                    | No                | Login user                        |
+| 3       | POST   | `/api/v1/auth/logout`                   | Yes               | Logout                            |
+| 4       | GET    | `/api/v1/auth/me`                       | Yes               | Get profile                       |
+| 5       | PUT    | `/api/v1/auth/me`                       | Yes               | Update profile                    |
+| 6       | PUT    | `/api/v1/auth/password`                 | Yes               | Update password                   |
+| 7       | GET    | `/api/v1/admin/users`                   | Yes               | List users                        |
+| 8       | PATCH  | `/api/v1/admin/switch-status/{id}`      | Yes (super_admin) | Toggle user status                |
+| --      | --     | **Public Content**                      | --                | --                                |
+| 9       | GET    | `/api/v1/services`                      | No                | List active services              |
+| 10      | GET    | `/api/v1/services/{id}`                 | No                | View service                      |
+| 11      | GET    | `/api/v1/categories`                    | No                | List active categories            |
+| 12      | GET    | `/api/v1/projects`                      | No                | List active projects              |
+| 13      | GET    | `/api/v1/projects/{id}`                 | No                | View project                      |
+| 14      | GET    | `/api/v1/projects/{id}/comments`        | No                | List project comments             |
+| 15      | POST   | `/api/v1/projects/{id}/comments`        | No                | Add project comment               |
+| 16      | GET    | `/api/v1/blogs`                         | No                | List active blogs                 |
+| 17      | GET    | `/api/v1/blogs/{id}`                    | No                | View blog                         |
+| 18      | GET    | `/api/v1/blogs/{id}/comments`           | No                | List blog comments                |
+| 19      | POST   | `/api/v1/blogs/{id}/comments`           | No                | Add blog comment                  |
+| 20      | GET    | `/api/v1/gallery-categories`            | No                | List gallery categories           |
+| 21      | GET    | `/api/v1/galleries`                     | No                | List active galleries             |
+| 22      | GET    | `/api/v1/galleries/{id}`                | No                | View gallery                      |
+| 23      | GET    | `/api/v1/teams`                         | No                | List active team                  |
+| 24      | GET    | `/api/v1/teams/{id}`                    | No                | View team member                  |
+| 25      | GET    | `/api/v1/testimonials`                  | No                | List testimonials                 |
+| 26      | POST   | `/api/v1/newsletters`                   | No                | Subscribe newsletter              |
+| 27      | GET    | `/api/v1/event-categories`              | No                | List event categories             |
+| 28      | GET    | `/api/v1/events`                        | No                | List events                       |
+| 29      | GET    | `/api/v1/events/{id}`                   | No                | View event                        |
+| 30      | GET    | `/api/v1/event-testimonials`            | No                | List event testimonials           |
+| 31      | GET    | `/api/v1/type-partners`                 | No                | List partner types                |
+| 32      | GET    | `/api/v1/partners`                      | No                | List partners                     |
+| --      | --     | **Admin CRUD**                          | --                | --                                |
+| 33-37   | CRUD   | `/api/v1/admin/services`                | Yes               | Services admin                    |
+| 38      | POST   | `/api/v1/admin/services/images`         | Yes               | Pre-upload service editor image   |
+| 39      | DELETE | `/api/v1/admin/services/{s}/images/{i}` | Yes               | Delete service image              |
+| 40-44   | CRUD   | `/api/v1/admin/categories`              | Yes               | Categories admin                  |
+| 45-49   | CRUD   | `/api/v1/admin/projects`                | Yes               | Projects admin                    |
+| 50-52   | Images | `/api/v1/admin/projects/{id}/images`    | Yes               | Project images                    |
+| 53-57   | CRUD   | `/api/v1/admin/blogs`                   | Yes               | Blogs admin                       |
+| 58      | POST   | `/api/v1/admin/blogs/images`            | Yes               | Pre-upload blog image             |
+| 59      | DELETE | `/api/v1/admin/blogs/images/{id}`       | Yes               | Delete unattached blog image      |
+| 60-62   | Images | `/api/v1/admin/blogs/{id}/images`       | Yes               | Attached blog images              |
+| 63-67   | CRUD   | `/api/v1/admin/gallery-categories`      | Yes               | Gallery categories                |
+| 68-72   | CRUD   | `/api/v1/admin/galleries`               | Yes               | Galleries                         |
+| 73-77   | CRUD   | `/api/v1/admin/teams`                   | Yes               | Team members                      |
+| 78-82   | CRUD   | `/api/v1/admin/testimonials`            | Yes               | Testimonials                      |
+| 83-86   | CRUD   | `/api/v1/admin/newsletters`             | Yes               | Newsletter subscribers            |
+| 87-91   | CRUD   | `/api/v1/admin/settings`                | Yes               | Site settings                     |
+| 92-96   | CRUD   | `/api/v1/event-categories`              | Yes (write)       | Event categories                  |
+| 97-101  | CRUD   | `/api/v1/events`                        | Yes (write)       | Events                            |
+| 102     | DELETE | `/api/v1/events/images/{id}`            | Yes               | Delete event image                |
+| 103     | POST   | `/api/v1/events/description-image`      | Yes               | Upload CKEditor event image       |
+| 104-108 | CRUD   | `/api/v1/participants`                  | Yes               | Event participants                |
+| 109-111 | CRUD   | `/api/v1/event-testimonials`            | Yes (write)       | Event testimonials                |
+| 112-116 | CRUD   | `/api/v1/type-partners`                 | Yes (write)       | Partner types                     |
+| 117-121 | CRUD   | `/api/v1/partners`                      | Yes (write)       | Partners                          |
+| 122     | POST   | `/api/v1/contacts`                      | No                | Submit public contact form        |
+| 123     | GET    | `/api/v1/contacts`                      | Yes               | List all contact messages (admin) |
+| 124     | DELETE | `/api/v1/contacts/{id}`                 | Yes               | Delete contact message (admin)    |
 
 ---
 

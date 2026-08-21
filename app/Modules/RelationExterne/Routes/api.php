@@ -1,5 +1,6 @@
 <?php
 
+use App\Modules\RelationExterne\Controllers\ContactController;
 use App\Modules\RelationExterne\Controllers\PartnerController;
 use App\Modules\RelationExterne\Controllers\TypePartnerController;
 use Illuminate\Support\Facades\Route;
@@ -11,6 +12,8 @@ Route::prefix('v1')->group(function () {
 
     Route::get('/partners', [PartnerController::class, 'index']);
     Route::get('/partners/{partner}', [PartnerController::class, 'show']);
+
+    Route::post('/contacts', [ContactController::class, 'store']);
 });
 
 Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
@@ -21,4 +24,7 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
     Route::post('/partners', [PartnerController::class, 'store']);
     Route::put('/partners/{partner}', [PartnerController::class, 'update']);
     Route::delete('/partners/{partner}', [PartnerController::class, 'destroy']);
+
+    Route::get('/contacts', [ContactController::class, 'index']);
+    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']);
 });
