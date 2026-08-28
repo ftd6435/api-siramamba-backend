@@ -89,7 +89,7 @@
                       </td>
                       <td style="padding:10px 0 10px 16px; border-bottom:1px solid #E1E8ED; vertical-align:top;">
                         <span style="font-size:12px; font-weight:700; color:#7A7A7A; text-transform:uppercase; letter-spacing:0.5px;">Date d'envoi</span><br/>
-                        <span style="font-weight:600; color:#2C4A5E;">{{ $contact->created_at->translatedFormat('d F Y &agrave; H:i') }}</span>
+                        <span style="font-weight:600; color:#2C4A5E;">{{ $contact->created_at->isoFormat('D MMMM YYYY [à] HH:mm') }}</span>
                       </td>
                     </tr>
                   </table>

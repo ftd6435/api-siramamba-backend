@@ -123,7 +123,7 @@
                                                 </td>
                                                 <td
                                                     style="padding:6px 0; font-size:14px; font-weight:600; color:#2C3E50;">
-                                                    {{ $contact->created_at->translatedFormat('d F Y &agrave; H:i') }}
+                                                    {{ $contact->created_at->isoFormat('D MMMM YYYY [à] HH:mm') }}
                                                 </td>
                                             </tr>
                                             <tr>
@@ -191,7 +191,7 @@
                                                     style="width:50%; padding-left:12px; padding-bottom:12px; vertical-align:top;">
                                                     <p style="margin:0; font-size:15px; color:#2C3E50;">
                                                         <span style="color:#B8984E; font-weight:700;">&#9654;</span>
-                                                        &nbsp;Forage industriel
+                                                        &nbsp;Extraction Semi-Industrielle
                                                     </p>
                                                 </td>
                                             </tr>
@@ -200,14 +200,14 @@
                                                     style="width:50%; padding-right:12px; padding-bottom:12px; vertical-align:top;">
                                                     <p style="margin:0; font-size:15px; color:#2C3E50;">
                                                         <span style="color:#B8984E; font-weight:700;">&#9654;</span>
-                                                        &nbsp;Infrastructure
+                                                        &nbsp;Commerce d'Or Brut
                                                     </p>
                                                 </td>
                                                 <td
                                                     style="width:50%; padding-left:12px; padding-bottom:12px; vertical-align:top;">
                                                     <p style="margin:0; font-size:15px; color:#2C3E50;">
                                                         <span style="color:#B8984E; font-weight:700;">&#9654;</span>
-                                                        &nbsp;Conseil &amp; &Eacute;tudes
+                                                        &nbsp;Conseil &amp; Expertise
                                                     </p>
                                                 </td>
                                             </tr>
@@ -248,7 +248,7 @@
                                                 <td style="border-radius:4px; background-color:#B8984E;">
                                                     <a href="tel:+224624000000"
                                                         style="display:inline-block; padding:12px 32px; font-family:'Helvetica Neue', Helvetica, Arial, sans-serif; font-size:16px; font-weight:600; color:#FFFFFF; text-decoration:none;">
-                                                        &phone; Nous appeler
+                                                        Tel: {{ env(ADMIN_TEL) }}
                                                     </a>
                                                 </td>
                                             </tr>
@@ -268,7 +268,7 @@
                                 SIRAMAMBA <span style="color:#C9A760;">MINING SA</span>
                             </div>
                             <p style="margin:0 0 10px 0; color:rgba(255,255,255,0.85); line-height:1.6;">
-                                Si&egrave;ge Social : Kaloum, Immeuble CBK, Bureau 4e &Eacute;tage<br />
+                                Si&egrave;ge Social : {{ env('ADMIN_ADDRESS') }}<br />
                                 Conakry, R&eacute;publique de Guin&eacute;e
                             </p>
                             <p style="margin:0; color:rgba(255,255,255,0.70); line-height:1.6;">
